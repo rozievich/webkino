@@ -7,6 +7,7 @@ class ReklamaState(StatesGroup):
 
 class AddMedia(StatesGroup):
     media = State()
+    url = State()
     media_id = State()
 
 

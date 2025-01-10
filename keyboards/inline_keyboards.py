@@ -4,8 +4,8 @@ from data.config import ALL_FILM_CHANNEL
 
 
 def forced_channel():
-    channels = channel.get_datas()
-    links_info = links.get_datas()
+    channels = channel.get_all()
+    links_info = links.get_all()
     buttons = []
     for i, v in enumerate(links_info):
         buttons.append([InlineKeyboardButton(text=f"{int(i) + 1} - kanal", url=f"{v['link']}")])

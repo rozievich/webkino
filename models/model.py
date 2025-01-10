@@ -27,9 +27,9 @@ async def get_users():
 
 async def statistika_user():
     data = user.statistika()
-    all_user = count(user.get_all())
+    all_user = user.get_all()
     if data:
-        return f"Userlar statistikasi 📊\n\nOxirgi 30 kunlik userlar: {len(data['month'])}\nOxirgi 7 kunlik userlar: {len(data['week'])}\nOxirgi 24 soatlik userlar: {len(data['day'])}\n\nBarcha Userlar soni: {all_user}"
+        return f"Userlar statistikasi 📊\n\nOxirgi 30 kunlik userlar: {len(data['month'])}\nOxirgi 7 kunlik userlar: {len(data['week'])}\nOxirgi 24 soatlik userlar: {len(data['day'])}\n\nBarcha Userlar soni: {len(all_user)}"
     else:
         return False
 
@@ -47,7 +47,9 @@ async def create_movie(file_id: str, caption: str, post_id: int, url: str) -> in
 async def get_movie(post_id):
     column = "post_id" if isinstance(post_id, int) else "url" if isinstance(post_id, str) else None
     if column:
+        print(column)
         data = movie.get(**{column: post_id})
+        print(data)
         return [data['file_id'], data['caption']] if data else False
     return False
 

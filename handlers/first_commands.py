@@ -2,11 +2,12 @@ from aiogram import types, Bot, Router
 from aiogram.filters.command import CommandStart, Command
 
 from data.config import ADMINS
-from keyboards.inline_keyboards import forced_channel
+from keyboards.inline_keyboards import forced_channel, rich_btn
 from keyboards.reply_keyboards import admin_btn
 from models.model import create_user, get_channel_order, get_join_request
 
 mrouter = Router()
+
 
 @mrouter.message(CommandStart())
 async def welcome_handler(msg: types.Message, bot: Bot):
@@ -14,7 +15,7 @@ async def welcome_handler(msg: types.Message, bot: Bot):
     check = await check_sub_channels(int(msg.from_user.id), bot)
     if check:
         await bot.set_my_commands([types.BotCommand(command="start", description="Ishga tushirish ♻️")])
-        await bot.send_message(msg.chat.id, text=f"Assalomu alaykum {msg.from_user.first_name} 🤖\n<b>Kinolar Studio Bot</b> - orqali siz o'zingizga yoqqan kinoni topishingiz mumkin 🎬\nShunchaki kino kodini yuboring va kinoni oling ✅")
+        await bot.send_message(msg.chat.id, text=f"Assalomu alaykum {msg.from_user.first_name} 🤖\n<b>Film Dunyosi Bot</b> - orqali siz o'zingizga yoqqan kinoni topishingiz mumkin 🎬\nMenga kino kodini yoki Instagram URL manzilini yuboring ✅", reply_markup=rich_btn())
     else:
         await msg.answer("Botdan foydalanish uchun ⚠️\nIltimos quidagi kanallarga obuna bo'ling ‼️", reply_markup=forced_channel())
 

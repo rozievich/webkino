@@ -5,8 +5,8 @@ load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
 ADMINS = [647857662, 5553781606]
-ALL_FILM_CHANNEL = "https://t.me/+zO18G6ZLkBc0ZDdi"
+ALL_FILM_CHANNEL = "https://t.me/toshkentzafarbekabod"
 DB_NAME = "kino_db"
 DB_PASSWORD = "black0613"
 WEBHOOK_PATH = "/webhook"
-WEBHOOK_URL = f"https://e2cd-84-54-84-188.ngrok-free.app{WEBHOOK_PATH}"
+WEBHOOK_URL = f"https://f09a-90-156-163-151.ngrok-free.app{WEBHOOK_PATH}"

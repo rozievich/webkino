@@ -6,8 +6,8 @@ from data.config import ADMINS
 from keyboards.inline_keyboards import forced_channel, rich_btn
 from keyboards.reply_keyboards import admin_btn, movies_btn, exit_btn, channels_btn, is_order_btn
 from models.model import (statistika_movie, create_movie, get_channels, create_channel, delete_channel, \
-    get_movie, create_link, delete_link, check_order_channels, create_join_request, get_movies, delete_movie_func, \
-    statistika_user, get_all_telegram_id)
+                          get_movie, create_link, delete_link, check_order_channels, create_join_request, get_movies,
+                          delete_movie_func, statistika_user, get_users)
 from states.state_admin import AddMedia, AddChannelState, DeleteChannelState, ReklamaState, AddLinkState, \
     DeleteLinkState, DeleteMovieState
 from .first_commands import check_sub_channels, mrouter
@@ -54,11 +54,26 @@ async def handle_video(msg: types.Message, state: FSMContext):
             await msg.answer("Kino yuklash bekor qilindi ❌", reply_markup=movies_btn())
             await state.clear()
         else:
+            print(msg)
             await state.update_data(file_id=msg.video.file_id, caption=msg.caption)
-            await state.set_state(AddMedia.media_id)
-            await msg.answer(text="Iltimos Kino uchun ID kiriting: ", reply_markup=exit_btn())
+            await state.set_state(AddMedia.url)
+            await msg.answer(text="Iltimos Kinoning Instagramdagi URL manzilini kiriting: ", reply_markup=exit_btn())
     except:
         await msg.answer("Iltimos Kino yuboring!", reply_markup=exit_btn())
+
+
+@mrouter.message(AddMedia.url)
+async def handle_media_url(msg: types.Message, state: FSMContext):
+    try:
+        if msg.text == "❌":
+            await msg.answer("Kino yuklash bekor qilindi ❌", reply_markup=movies_btn())
+            await state.clear()
+        else:
+            await state.update_data(url=msg.text)
+            await state.set_state(AddMedia.media_id)
+            await msg.answer(text="Iltimos Kino uchun ID kiriting: ", reply_markup=exit_btn())
+    except Exception as e:
+        await msg.answer("Iltimos to'g'ri URL manzilni yuboring!", reply_markup=exit_btn())
 
 
 @mrouter.message(AddMedia.media_id)
@@ -69,13 +84,15 @@ async def handle_media_id(msg: types.Message, state: FSMContext):
             await state.clear()
         elif not await get_movie(int(msg.text)):
             film_info = await state.get_data()
-            data = await create_movie(file_id=film_info['file_id'], caption=film_info['caption'], post_id=int(msg.text))
+            data = await create_movie(file_id=film_info['file_id'], caption=film_info['caption'], post_id=int(msg.text),
+                                      url=film_info['url'])
             if data:
                 await msg.reply(f"Kino malumotlar bazasiga saqlandi ✅\nKino Kodi: {data}", reply_markup=movies_btn())
             await state.clear()
         else:
             await msg.reply(f"{msg.text} - ID bilan kino mavjud!")
-    except:
+    except Exception as e:
+        print(e)
         await msg.answer("Iltimos Kod sifatida Raqam yuboring!", reply_markup=exit_btn())
 
 
@@ -151,7 +168,8 @@ async def is_order_handler(msg: types.Message, state: FSMContext):
         await state.clear()
     else:
         channel_info = await state.get_data()
-        data = await create_channel(channel_info['username'], channel_info['channel_id'], True if msg.text == "Ha ✅" else False)
+        data = await create_channel(channel_info['username'], channel_info['channel_id'],
+                                    True if msg.text == "Ha ✅" else False)
         if data:
             await msg.answer("Kanal muvaffaqiyatli qo'shildi ✅", reply_markup=channels_btn())
             await state.clear()
@@ -236,7 +254,8 @@ async def reklama_handler(msg: types.Message, bot: Bot, state: FSMContext):
         await state.set_state(ReklamaState.rek)
         await bot.send_message(chat_id=msg.chat.id, text="Reklama tarqatish bo'limi 🤖", reply_markup=exit_btn())
     else:
-        await bot.send_message(chat_id=msg.chat.id, text="Siz admin emassiz ❌", reply_markup=types.ReplyKeyboardRemove())
+        await bot.send_message(chat_id=msg.chat.id, text="Siz admin emassiz ❌",
+                               reply_markup=types.ReplyKeyboardRemove())
 
 
 @mrouter.message(ReklamaState.rek)
@@ -248,7 +267,7 @@ async def rek_state_handler(msg: types.Message, bot: Bot, state: FSMContext):
         await bot.send_message(chat_id=msg.chat.id, text="Reklama yuborish boshlandi 🤖✅", reply_markup=admin_btn())
         await state.clear()
 
-        all_users = await get_all_telegram_id()
+        all_users = await get_users()
 
         batch_size = 20
         success_count = 0
@@ -258,11 +277,10 @@ async def rek_state_handler(msg: types.Message, bot: Bot, state: FSMContext):
             batch_tasks = [send_advertisement(int(user['telegram_id']), msg, bot) for user in batch]
             results = await asyncio.gather(*batch_tasks)
             success_count += sum(results)
-            await asyncio.sleep(1)  # Har guruh yuborilgandan so'ng 1 soniya kutish
+            await asyncio.sleep(1)
 
         failed_count = len(all_users) - success_count
 
-        # Adminlarga natijalarni yuborish
         admin_tasks = [
             bot.send_message(
                 chat_id=admin,
@@ -282,7 +300,8 @@ async def channel_check_handler(callback: types.CallbackQuery, bot: Bot):
         await callback.message.delete()
         await callback.answer("Obuna bo'lganingiz uchun rahmat ☺️")
     else:
-        await callback.message.answer("Botdan foydalanish uchun ⚠️\nIltimos quidagi kanallarga obuna bo'ling ‼️", reply_markup=forced_channel())
+        await callback.message.answer("Botdan foydalanish uchun ⚠️\nIltimos quidagi kanallarga obuna bo'ling ‼️",
+                                      reply_markup=forced_channel())
 
 
 @mrouter.message(F.text == "❌")
@@ -291,22 +310,23 @@ async def exit_handler(msg: types.Message):
         await msg.answer("Bosh menyu 🔮", reply_markup=admin_btn())
 
 
-@mrouter.message(F.text.isdigit())
+@mrouter.message(F.text)
 async def forward_last_video(msg: types.Message, bot: Bot):
     check = await check_sub_channels(int(msg.from_user.id), bot)
     if check:
-        data = await get_movie(int(msg.text))
+        data = await get_movie(int(msg.text) if msg.text.isdigit() else msg.text)
         all_movie = await get_movies()
         if data:
             try:
-                await bot.send_video(chat_id=msg.from_user.id, video=data[0], caption=f"{data[1]}\n\n🤖 Bizning bot: @kinolar_studio_bot")
+                await bot.send_video(chat_id=msg.from_user.id, video=data[0], caption=f"{data[1]}\n\n🤖 Bizning bot: @filimdunyosi_bot")
                 await msg.answer(f"<b> 📥 Yuklangan: {len(all_movie)} ta</b>", reply_markup=rich_btn())
             except:
                 await msg.reply(f"{msg.text} - id bilan hech qanday kino topilmadi ❌")
         else:
             await msg.reply(f"{msg.text} - id bilan hech qanday kino topilmadi ❌")
     else:
-        await msg.answer("Botdan foydalanish uchun ⚠️\nIltimos quidagi kanallarga obuna bo'ling ‼️", reply_markup=forced_channel())
+        await msg.answer("Botdan foydalanish uchun ⚠️\nIltimos quidagi kanallarga obuna bo'ling ‼️",
+                         reply_markup=forced_channel())
 
 
 @mrouter.chat_join_request()

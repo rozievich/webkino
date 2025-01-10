@@ -5,9 +5,11 @@ from fastapi import FastAPI, Request
 from loader import bot, dp
 from data.config import WEBHOOK_URL, WEBHOOK_PATH
 from handlers.first_commands import mrouter
+from db.connect import startup_table
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    startup_table()
     await bot.set_webhook(WEBHOOK_URL)
     dp.include_routers(mrouter)
     print(f"Webhook set up: {WEBHOOK_URL}")
