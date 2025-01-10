@@ -42,6 +42,7 @@ def startup_table():
     CREATE TABLE IF NOT EXISTS movies(
         id BIGSERIAL PRIMARY KEY,
         post_id INT NOT NULL,
+        url VARCHAR(500) NOT NULL,
         file_id VARCHAR(800) NOT NULL,
         caption TEXT,
         created_at TIMESTAMP DEFAULT now()
