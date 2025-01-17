@@ -13,11 +13,11 @@ mrouter = Router()
 async def welcome_handler(msg: types.Message, bot: Bot):
     await create_user(msg.from_user.id)
     check = await check_sub_channels(int(msg.from_user.id), bot)
-    if check:
+    if check[0]:
         await bot.set_my_commands([types.BotCommand(command="start", description="Ishga tushirish ♻️")])
         await bot.send_message(msg.chat.id, text=f"Assalomu alaykum {msg.from_user.first_name} 🤖\n<b>Film Dunyosi Bot</b> - orqali siz o'zingizga yoqqan kinoni topishingiz mumkin 🎬\nMenga kino kodini yoki Instagram URL manzilini yuboring ✅", reply_markup=rich_btn())
     else:
-        await msg.answer("Botdan foydalanish uchun ⚠️\nIltimos quidagi kanallarga obuna bo'ling ‼️", reply_markup=forced_channel())
+        await msg.answer("Botdan foydalanish uchun ⚠️\nIltimos quidagi kanallarga obuna bo'ling ‼️", reply_markup=forced_channel(check[1]))
 
 
 @mrouter.message(Command("panel"))
@@ -30,22 +30,26 @@ async def admin_handler(msg: types.Message):
 
 async def check_sub_channels(user_id: int, bot: Bot):
     if user_id in ADMINS:
-        return True
+        return True, []
     else:
         channels = await get_channel_order(is_order=False)
         request_channels = await get_channel_order(is_order=True)
+        unsubscribed_channels = []
+
         for channel in channels:
             chat_member = await bot.get_chat_member(chat_id=channel[2], user_id=user_id)
             if chat_member.status == "left":
-                return False
-        else:
-            if request_channels:
-                summa = 0
-                for channel in request_channels:
-                    info = await get_join_request(channel[2], str(user_id))
-                    if info:
-                        summa += 1
+                unsubscribed_channels.append(channel)
+
+        if request_channels:
+            summa = 0
+            for channel in request_channels:
+                info = await get_join_request(channel[2], str(user_id))
+                if info:
+                    summa += 1
                 else:
-                    return summa == len(request_channels)
-            else:
-                return True
+                    unsubscribed_channels.append(channel)
+
+            return summa == len(request_channels), unsubscribed_channels
+        else:
+            return len(unsubscribed_channels) == 0, unsubscribed_channels

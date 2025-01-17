@@ -296,12 +296,12 @@ async def rek_state_handler(msg: types.Message, bot: Bot, state: FSMContext):
 @mrouter.callback_query(F.data == "channel_check")
 async def channel_check_handler(callback: types.CallbackQuery, bot: Bot):
     check = await check_sub_channels(callback.from_user.id, bot)
-    if check:
+    if check[0]:
         await callback.message.delete()
         await callback.answer("Obuna bo'lganingiz uchun rahmat ☺️")
     else:
         await callback.message.answer("Botdan foydalanish uchun ⚠️\nIltimos quidagi kanallarga obuna bo'ling ‼️",
-                                      reply_markup=forced_channel())
+                                      reply_markup=forced_channel(check[1]))
 
 
 @mrouter.message(F.text == "❌")
@@ -313,7 +313,7 @@ async def exit_handler(msg: types.Message):
 @mrouter.message(F.text)
 async def forward_last_video(msg: types.Message, bot: Bot):
     check = await check_sub_channels(int(msg.from_user.id), bot)
-    if check:
+    if check[0]:
         data = await get_movie(int(msg.text) if msg.text.isdigit() else msg.text)
         all_movie = await get_movies()
         if data:
@@ -326,7 +326,7 @@ async def forward_last_video(msg: types.Message, bot: Bot):
             await msg.reply(f"{msg.text} - id bilan hech qanday kino topilmadi ❌")
     else:
         await msg.answer("Botdan foydalanish uchun ⚠️\nIltimos quidagi kanallarga obuna bo'ling ‼️",
-                         reply_markup=forced_channel())
+                         reply_markup=forced_channel(check[1]))
 
 
 @mrouter.chat_join_request()

@@ -1,10 +1,9 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from models.model import channel, links
+from models.model import links
 from data.config import ALL_FILM_CHANNEL
 
 
-def forced_channel():
-    channels = channel.get_all()
+def forced_channel(channels):
     links_info = links.get_all()
     buttons = []
     for i, v in enumerate(links_info):
