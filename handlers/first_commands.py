@@ -31,25 +31,19 @@ async def admin_handler(msg: types.Message):
 async def check_sub_channels(user_id: int, bot: Bot):
     if user_id in ADMINS:
         return True, []
-    else:
-        channels = await get_channel_order(is_order=False)
-        request_channels = await get_channel_order(is_order=True)
-        unsubscribed_channels = []
 
-        for channel in channels:
-            chat_member = await bot.get_chat_member(chat_id=channel[2], user_id=user_id)
-            if chat_member.status == "left":
-                unsubscribed_channels.append(channel)
+    channels = await get_channel_order(is_order=False)
+    request_channels = await get_channel_order(is_order=True)
+    unsubscribed_channels = []
 
-        if request_channels:
-            summa = 0
-            for channel in request_channels:
-                info = await get_join_request(channel[2], str(user_id))
-                if info:
-                    summa += 1
-                else:
-                    unsubscribed_channels.append(channel)
+    for channel in channels:
+        chat_member = await bot.get_chat_member(chat_id=channel[2], user_id=user_id)
+        if chat_member.status == "left":
+            unsubscribed_channels.append(channel)
 
-            return summa == len(request_channels), unsubscribed_channels
-        else:
-            return len(unsubscribed_channels) == 0, unsubscribed_channels
+    for channel in request_channels:
+        info = await get_join_request(channel[2], str(user_id))
+        if not info:
+            unsubscribed_channels.append(channel)
+
+    return len(unsubscribed_channels) == 0, unsubscribed_channels
